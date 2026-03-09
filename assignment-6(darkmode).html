@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dark Mode Toggle</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      color: #000000;
+      text-align: center;
+      padding: 60px;
+      transition: background 0.3s, color 0.3s;
+    }
+    body.dark {
+      background: #1a1a1a;
+      color: #ffffff;
+    }
+    button {
+      padding: 12px 28px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #333;
+      color: #fff;
+      margin-top: 20px;
+    }
+    body.dark button {
+      background: #f5c842;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+
+  <h1 id="title">☀️ Light Mode</h1>
+  <p>Your preference is saved even after refresh.</p>
+
+  <!-- inline style practice -->
+  <p style="font-size: 0.85rem; color: gray; margin-top: 10px;">
+    localStorage value: <strong id="lsDisplay">null</strong>
+  </p>
+
+  <button onclick="toggleMode()">Switch Mode</button>
+
+  <script>
+    // On page load, check localStorage
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') applyDark();
+    updateDisplay();
+
+    function toggleMode() {
+      if (document.body.classList.contains('dark')) {
+        applyLight();
+        localStorage.setItem('theme', 'light');
+      } else {
+        applyDark();
+        localStorage.setItem('theme', 'dark');
+      }
+      updateDisplay();
+    }
+
+    function applyDark() {
+      document.body.classList.add('dark');
+      document.getElementById('title').textContent = '🌙 Dark Mode';
+    }
+
+    function applyLight() {
+      document.body.classList.remove('dark');
+      document.getElementById('title').textContent = '☀️ Light Mode';
+    }
+
+    function updateDisplay() {
+      document.getElementById('lsDisplay').textContent = localStorage.getItem('theme');
+    }
+  </script>
+
+</body>
+</html>
