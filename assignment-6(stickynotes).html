@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sticky Notes</title>
+</head>
+<body style="
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  padding: 40px 30px;
+  margin: 0;
+">
+
+  <!-- HEADER -->
+  <div style="text-align: center; margin-bottom: 40px;">
+    <h1 style="
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #f5c842;
+      margin: 0 0 8px 0;
+      letter-spacing: -1px;
+    ">📝 Sticky Notes</h1>
+    <p style="color: rgba(255,255,255,0.5); font-size: 0.95rem; margin: 0;">
+      Your notes are saved — they survive page refresh!
+    </p>
+  </div>
+
+  <!-- INPUT ROW -->
+  <div style="
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+  ">
+    <input
+      type="text"
+      id="noteInput"
+      placeholder="Write a note and press Enter..."
+      style="
+        padding: 14px 20px;
+        width: 320px;
+        font-size: 1rem;
+        font-family: Arial, sans-serif;
+        border: 2px solid rgba(255,255,255,0.2);
+        border-radius: 14px;
+        background: rgba(255,255,255,0.1);
+        color: #ffffff;
+        outline: none;
+      "
+    />
+    <button
+      onclick="addNote()"
+      style="
+        padding: 14px 28px;
+        font-size: 1rem;
+        font-family: Arial, sans-serif;
+        font-weight: 600;
+        background: linear-gradient(135deg, #f5c842, #ff9f43);
+        color: #1a1a1a;
+        border: none;
+        border-radius: 14px;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(245,200,66,0.35);
+      "
+    >＋ Add Note</button>
+  </div>
+
+  <!-- COLOUR PICKER -->
+  <div style="
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  ">
+    <span style="color: rgba(255,255,255,0.45); font-size: 0.85rem;">Pick colour:</span>
+
+    <div onclick="selectColor('yellow', this)"  id="dot-yellow" style="width:24px; height:24px; border-radius:50%; background:#fef08a; cursor:pointer; border: 3px solid white;"></div>
+    <div onclick="selectColor('green', this)"   id="dot-green"  style="width:24px; height:24px; border-radius:50%; background:#bbf7d0; cursor:pointer; border: 3px solid transparent;"></div>
+    <div onclick="selectColor('blue', this)"    id="dot-blue"   style="width:24px; height:24px; border-radius:50%; background:#bae6fd; cursor:pointer; border: 3px solid transparent;"></div>
+    <div onclick="selectColor('pink', this)"    id="dot-pink"   style="width:24px; height:24px; border-radius:50%; background:#fecdd3; cursor:pointer; border: 3px solid transparent;"></div>
+    <div onclick="selectColor('purple', this)"  id="dot-purple" style="width:24px; height:24px; border-radius:50%; background:#e9d5ff; cursor:pointer; border: 3px solid transparent;"></div>
+    <div onclick="selectColor('orange', this)"  id="dot-orange" style="width:24px; height:24px; border-radius:50%; background:#fed7aa; cursor:pointer; border: 3px solid transparent;"></div>
+  </div>
+
+  <!-- NOTE COUNT -->
+  <div id="countBadge" style="
+    text-align: center;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  ">0 notes</div>
+
+  <!-- BOARD -->
+  <div id="board" style="
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  "></div>
+
+
+  <script>
+
+    // Colour map — background for each colour name
+    const colorMap = {
+      yellow: '#fef08a',
+      green:  '#bbf7d0',
+      blue:   '#bae6fd',
+      pink:   '#fecdd3',
+      purple: '#e9d5ff',
+      orange: '#fed7aa',
+    };
+
+    let notes         = JSON.parse(localStorage.getItem('sticky-notes')) || [];
+    let selectedColor = 'yellow';
+
+    renderNotes();
+
+    // ── SELECT COLOUR ──
+    function selectColor(color, el) {
+      selectedColor = color;
+      // Reset all dot borders
+      Object.keys(colorMap).forEach(c => {
+        document.getElementById('dot-' + c).style.border = '3px solid transparent';
+      });
+      // Highlight selected dot
+      el.style.border = '3px solid white';
+    }
+
+    // ── ADD ──
+    function addNote() {
+      const input = document.getElementById('noteInput');
+      const text  = input.value.trim();
+      if (!text) return;
+
+      notes.push({
+        id:    Date.now(),
+        text:  text,
+        color: selectedColor,
+        time:  new Date().toLocaleString('en-US', {
+          month: 'short', day: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        })
+      });
+
+      localStorage.setItem('sticky-notes', JSON.stringify(notes));
+      input.value = '';
+      renderNotes();
+    }
+
+    // Enter key to add
+    document.getElementById('noteInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addNote();
+    });
+
+    // ── DELETE ──
+    function deleteNote(id) {
+      notes = notes.filter(n => n.id !== id);
+      localStorage.setItem('sticky-notes', JSON.stringify(notes));
+      renderNotes();
+    }
+
+    // ── EDIT ──
+    function editNote(id) {
+      const note   = notes.find(n => n.id === id);
+      const noteEl = document.querySelector(`[data-id="${id}"]`);
+
+      noteEl.style.background = '#ffffff';
+      noteEl.innerHTML = `
+        <textarea id="edit-${id}" style="
+          width: 100%;
+          height: 90px;
+          font-size: 1.1rem;
+          font-family: Arial, sans-serif;
+          border: 2px solid #3b82f6;
+          border-radius: 8px;
+          padding: 8px;
+          resize: none;
+          outline: none;
+          background: #f8fafc;
+          color: #1a1a1a;
+          box-sizing: border-box;
+        ">${note.text}</textarea>
+
+        <div style="display:flex; gap:6px; margin-top: 8px; justify-content: flex-end;">
+          <button onclick="saveNote(${id})" style="
+            padding: 5px 12px; font-size: 0.75rem; font-weight: 600;
+            background: #22c55e; color: #fff; border: none;
+            border-radius: 8px; cursor: pointer;
+          ">💾 Save</button>
+          <button onclick="deleteNote(${id})" style="
+            padding: 5px 12px; font-size: 0.75rem; font-weight: 600;
+            background: #ef4444; color: #fff; border: none;
+            border-radius: 8px; cursor: pointer;
+          ">✕ Delete</button>
+        </div>
+      `;
+      document.getElementById(`edit-${id}`).focus();
+    }
+
+    // ── SAVE ──
+    function saveNote(id) {
+      const newText = document.getElementById(`edit-${id}`).value.trim();
+      if (!newText) return;
+      notes.find(n => n.id === id).text = newText;
+      localStorage.setItem('sticky-notes', JSON.stringify(notes));
+      renderNotes();
+    }
+
+    // ── RENDER ──
+    function renderNotes() {
+      const board = document.getElementById('board');
+      document.getElementById('countBadge').textContent =
+        `${notes.length} note${notes.length !== 1 ? 's' : ''}`;
+
+      if (notes.length === 0) {
+        board.innerHTML = `
+          <div style="
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.3);
+          ">
+            <div style="font-size: 56px; margin-bottom: 12px;">🗒️</div>
+            <p style="font-size: 1rem;">No notes yet — add your first one above!</p>
+          </div>`;
+        return;
+      }
+
+      board.innerHTML = '';
+      notes.forEach(note => {
+        const bg = colorMap[note.color] || '#fef08a';
+
+        const card = document.createElement('div');
+        card.dataset.id = note.id;
+
+        // All card styles are inline
+        card.style.cssText = `
+          background: ${bg};
+          border-radius: 18px;
+          padding: 16px 16px 56px 16px;
+          position: relative;
+          min-height: 160px;
+          word-break: break-word;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+          color: #1a1a1a;
+          font-family: Arial, sans-serif;
+        `;
+
+        card.innerHTML = `
+          <!-- timestamp -->
+          <div style="
+            font-size: 0.68rem;
+            opacity: 0.5;
+            margin-bottom: 8px;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+          ">${note.time}</div>
+
+          <!-- note text -->
+          <div style="
+            font-size: 1.2rem;
+            line-height: 1.5;
+            font-weight: 500;
+          ">${note.text}</div>
+
+          <!-- buttons -->
+          <div style="
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            display: flex;
+            gap: 6px;
+          ">
+            <button onclick="editNote(${note.id})" style="
+              padding: 5px 12px;
+              font-size: 0.75rem;
+              font-weight: 600;
+              font-family: Arial, sans-serif;
+              background: #3b82f6;
+              color: #fff;
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;
+            ">✏️ Edit</button>
+
+            <button onclick="deleteNote(${note.id})" style="
+              padding: 5px 12px;
+              font-size: 0.75rem;
+              font-weight: 600;
+              font-family: Arial, sans-serif;
+              background: #ef4444;
+              color: #fff;
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;
+            ">✕ Delete</button>
+          </div>
+        `;
+
+        board.appendChild(card);
+      });
+    }
+
+  </script>
+
+</body>
+</html>
