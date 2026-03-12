@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tech News</title>
+</head>
+<body>
+<h1>Tech News</h1>
+<button onclick="getNews('AI')">AI</button>
+<button onclick="getNews('JavaScript')">JavaScript</button>
+<button onclick="getNews('Startup')">Startup</button>
+<button onclick="getNews('Programming')">Programming</button>
+<hr>
+<div id="news"></div>
+<script>
+async function getNews(topic){
+const url = `https://hn.algolia.com/api/v1/search?query=${topic}`;
+const res = await fetch(url);
+const data = await res.json();
+console.log("data:", data);
+showNews(data.hits);
+}
+function showNews(articles){
+const newsDiv = document.querySelector("#news");
+newsDiv.innerHTML = "";
+articles.forEach(item => {
+let div = document.createElement("div");
+let title = document.createElement("h3");
+title.innerText = item.title;
+let link = document.createElement("a");
+link.innerText = "Read";
+link.href = item.url;
+link.target = "_blank";
+div.appendChild(title);
+div.appendChild(link);
+newsDiv.appendChild(div);
+let hr = document.createElement("hr");
+newsDiv.appendChild(hr);
+});
+console.log("data:", data);
+}
+</script>
+</body>
+</html>
